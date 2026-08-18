@@ -1,0 +1,56 @@
+{
+  "GUA": {
+    "label": "Guardian",
+    "full": "The 100 Best Films of the 21st Century",
+    "year": 2019,
+    "url": "https://www.theguardian.com/film/2019/sep/13/100-best-films-movies-of-the-21st-century",
+    "scope": "Escolha dos críticos do Guardian",
+    "era": "XXI",
+    "color": "#e0533d"
+  },
+  "NYT": {
+    "label": "Times",
+    "full": "The 100 Best Movies of the 21st Century",
+    "year": 2025,
+    "url": "https://www.nytimes.com/interactive/2025/movies/best-movies-21st-century.html",
+    "scope": "Poll com 500+ cineastas, atores e profissionais",
+    "era": "XXI",
+    "color": "#4a90d9"
+  },
+  "BBC": {
+    "label": "BBC",
+    "full": "The 21st Century's 100 Greatest Films",
+    "year": 2016,
+    "url": "https://www.bbc.com/culture/article/20160819-the-21st-centurys-100-greatest-films",
+    "scope": "Poll com 177 críticos de cinema (corte em jun/2016)",
+    "era": "XXI",
+    "color": "#9b6dc4"
+  },
+  "ROL": {
+    "label": "Rolling Stone",
+    "full": "The 100 Best Movies of the 20th Century",
+    "year": 1999,
+    "url": "https://www.rollingstone.com/feature/100-best-movies-20th-century-peter-travers-40636",
+    "scope": "Escolha de Peter Travers, crítico da Rolling Stone",
+    "era": "XX",
+    "color": "#3fae8f"
+  },
+  "VIL": {
+    "label": "Village Voice",
+    "full": "100 Best Films of the 20th Century",
+    "year": 2000,
+    "url": "",
+    "scope": "Poll com ~50 críticos de cinema",
+    "era": "XX",
+    "color": "#d9a441"
+  },
+  "SIS": {
+    "label": "Sight & Sound",
+    "full": "The Greatest Films of All Time",
+    "year": 2022,
+    "url": "",
+    "scope": "Poll decenal do BFI com ~1600 críticos (all-time, não só séc. XX)",
+    "era": "ALL",
+    "color": "#cf6a9c"
+  }
+}

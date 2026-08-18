@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Listas essenciais e grandes premiações para ajudar você a escolher o próximo filme.">
+  <title>Absolute Cinema</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,700;9..144,900&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div>
+      <a class="brand" href="./"><img src="assets/logo.svg" alt="Absolute Cinema"></a>
+      <p class="tagline">Escolher um filme não devia ser tão difícil. Filtre pelo seu interesse ou simplesmente sorteie.</p>
+    </div>
+    <button class="icon-button" id="favoritesButton" type="button" aria-pressed="false" title="Ver favoritos">♡</button>
+  </header>
+
+  <nav class="view-switch" aria-label="Base de filmes">
+    <button class="view-button active" data-view="lists" type="button"><img src="assets/filmcurator.png" alt=""> Listas</button>
+    <button class="view-button" data-view="awards" type="button"><img src="assets/filmfestivals.png" alt=""> Premiações</button>
+  </nav>
+
+  <div class="page-shell">
+    <aside class="filters collapsed">
+      <div class="mobile-actions">
+        <button class="mobile-action" id="filtersToggle" type="button" aria-expanded="false">
+          <svg viewBox="0 -960 960 960" aria-hidden="true"><path d="M400-240v-80h160v80H400ZM240-440v-80h480v80H240ZM120-640v-80h720v80H120Z"/></svg>
+          <span>Filtros</span>
+        </button>
+        <button class="mobile-action" data-shuffle type="button">
+          <svg viewBox="0 -960 960 960" aria-hidden="true"><path d="M342.5-257.5Q360-275 360-300t-17.5-42.5Q325-360 300-360t-42.5 17.5Q240-325 240-300t17.5 42.5Q275-240 300-240t42.5-17.5Zm0-360Q360-635 360-660t-17.5-42.5Q325-720 300-720t-42.5 17.5Q240-685 240-660t17.5 42.5Q275-600 300-600t42.5-17.5Zm180 180Q540-455 540-480t-17.5-42.5Q505-540 480-540t-42.5 17.5Q420-505 420-480t17.5 42.5Q455-420 480-420t42.5-17.5Zm180 180Q720-275 720-300t-17.5-42.5Q685-360 660-360t-42.5 17.5Q600-325 600-300t17.5 42.5Q635-240 660-240t42.5-17.5Zm0-360Q720-635 720-660t-17.5-42.5Q685-720 660-720t-42.5 17.5Q600-685 600-660t17.5 42.5Q635-600 660-600t42.5-17.5ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Z"/></svg>
+          <span>Sortear filme</span>
+        </button>
+      </div>
+      <label class="field">
+        <span>Buscar</span>
+        <input id="query" type="search" placeholder="Título ou diretor…">
+      </label>
+
+      <fieldset class="field" id="sourceField">
+        <legend id="sourceLegend">Listas</legend>
+        <div class="chips" id="sourceChips"></div>
+      </fieldset>
+
+      <label class="field lists-only">
+        <span>Premiação</span>
+        <select id="awardFilter">
+          <option value="">Qualquer</option>
+          <option value="any">Cannes ou Oscar</option>
+          <option value="cannes">Cannes</option>
+          <option value="oscar">Oscar</option>
+          <option value="both">Cannes e Oscar</option>
+        </select>
+      </label>
+
+      <label class="check-row awards-only" hidden>
+        <input id="onlyBoth" type="checkbox">
+        <span>Só premiados nos dois festivais</span>
+      </label>
+
+      <div class="field">
+        <span>Plataformas</span>
+        <details class="multi-select" id="platformPicker">
+          <summary id="platformSummary">Todas</summary>
+          <div class="check-list" id="platformOptions"></div>
+        </details>
+      </div>
+
+      <label class="field"><span>País de origem</span><select id="country"><option value="">Todos</option></select></label>
+      <label class="field"><span>Diretor</span><select id="director"><option value="">Todos</option></select></label>
+      <label class="field"><span>Gênero</span><select id="genre"><option value="">Todos</option></select></label>
+
+      <div class="field">
+        <span id="yearLabel">Ano do filme</span>
+        <div class="range-pair">
+          <input id="yearMin" type="number" inputmode="numeric" aria-label="Ano mínimo">
+          <span>até</span>
+          <input id="yearMax" type="number" inputmode="numeric" aria-label="Ano máximo">
+        </div>
+      </div>
+
+      <label class="field">
+        <span>Duração máxima: <strong id="durationValue">qualquer</strong></span>
+        <input id="duration" type="range" min="60" max="321" value="321">
+      </label>
+      <button id="resetFilters" class="reset-bottom" type="button">Limpar filtros</button>
+    </aside>
+
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow" id="viewEyebrow">Consenso crítico</p>
+          <h1 id="viewTitle">A curadoria da crítica, reunida.</h1>
+          <p id="viewDescription">Grandes listas reunidas em uma só curadoria. Veja onde elas concordam ou siga a sua favorita.</p>
+        </div>
+      </section>
+
+      <div class="toolbar">
+        <p><strong id="resultCount">0</strong> filmes</p>
+        <label>Ordenar <select id="sort"></select></label>
+      </div>
+      <div id="movieGrid" class="movie-grid" aria-live="polite"></div>
+    </main>
+  </div>
+
+  <dialog id="shuffleDialog">
+    <button class="dialog-close" id="closeShuffle" type="button" aria-label="Fechar">×</button>
+    <div id="drawResult" class="draw-result"></div>
+    <div class="reroll">
+      <h3>Sortear outro</h3>
+      <div class="draw-controls">
+        <label class="field"><span>Gênero</span><select id="drawGenre"><option value="">Qualquer</option></select></label>
+        <div class="field">
+          <span>Plataformas</span>
+          <details class="multi-select">
+            <summary id="drawPlatformSummary">Qualquer</summary>
+            <div class="check-list" id="drawPlatformOptions"></div>
+          </details>
+        </div>
+      </div>
+      <button class="shuffle-button reroll-button" id="drawAgain" type="button">
+        <svg viewBox="0 -960 960 960" aria-hidden="true"><path d="M342.5-257.5Q360-275 360-300t-17.5-42.5Q325-360 300-360t-42.5 17.5Q240-325 240-300t17.5 42.5Q275-240 300-240t42.5-17.5Zm0-360Q360-635 360-660t-17.5-42.5Q325-720 300-720t-42.5 17.5Q240-685 240-660t17.5 42.5Q275-600 300-600t42.5-17.5Zm180 180Q540-455 540-480t-17.5-42.5Q505-540 480-540t-42.5 17.5Q420-505 420-480t17.5 42.5Q455-420 480-420t42.5-17.5Zm180 180Q720-275 720-300t-17.5-42.5Q685-360 660-360t-42.5 17.5Q600-325 600-300t17.5 42.5Q635-240 660-240t42.5-17.5Zm0-360Q720-635 720-660t-17.5-42.5Q685-720 660-720t-42.5 17.5Q600-685 600-660t17.5 42.5Q635-600 660-600t42.5-17.5ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Z"/></svg>
+        <span>Sortear de novo</span>
+      </button>
+    </div>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
