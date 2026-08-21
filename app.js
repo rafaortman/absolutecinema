@@ -114,6 +114,7 @@ async function boot(){
 }
 
 document.querySelector('.view-switch').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view,true);});
+document.querySelector('.switch').addEventListener('click',()=>setView(state.view==='lists'?'awards':'lists',true));
 $('sourceChips').addEventListener('change',e=>{const input=e.target.closest('input[data-source]');if(!input)return;input.checked?state.sources.add(input.dataset.source):state.sources.delete(input.dataset.source);render();});
 [['query','input','query'],['awardFilter','change','awardFilter'],['country','change','country'],['director','change','director'],['genre','change','genre'],['sort','change','sort']].forEach(([id,event,key])=>$(id).addEventListener(event,e=>{state[key]=e.target.value;render();}));
 $('onlyBoth').addEventListener('change',e=>{state.onlyBoth=e.target.checked;render();});

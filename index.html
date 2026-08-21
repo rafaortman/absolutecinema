@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bree+Serif&family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
   <header class="site-header">
@@ -21,8 +21,11 @@
   </header>
 
   <nav class="view-switch" aria-label="Base de filmes">
-    <button class="view-button active" data-view="lists" type="button"><img src="assets/filmcurator.png" alt=""> Listas</button>
-    <button class="view-button" data-view="awards" type="button"><img src="assets/filmfestivals.png" alt=""> Premiações</button>
+    <div class="toggle-switch">
+      <button class="view-button active" data-view="lists" type="button"><svg viewBox="0 -960 960 960" aria-hidden="true"><path d="m160-800 80 160h120l-80-160h80l80 160h120l-80-160h80l80 160h120l-80-160h120q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800Zm0 240v320h640v-320H160Zm0 0v320-320Z"/></svg> Listas</button>
+      <button class="switch" type="button" role="switch" aria-label="Alternar base de filmes"><span class="switch-knob"></span></button>
+      <button class="view-button" data-view="awards" type="button"><svg viewBox="0 -960 960 960" aria-hidden="true"><path d="M280-120v-80h160v-124q-49-11-87.5-41.5T296-442q-75-9-125.5-65.5T120-640v-40q0-33 23.5-56.5T200-760h80v-80h400v80h80q33 0 56.5 23.5T840-680v40q0 76-50.5 132.5T664-442q-18 46-56.5 76.5T520-324v124h160v80H280Zm0-408v-152h-80v40q0 38 22 68.5t58 43.5Zm285 93q35-35 35-85v-240H360v240q0 50 35 85t85 35q50 0 85-35Zm115-93q36-13 58-43.5t22-68.5v-40h-80v152Zm-200-52Z"/></svg> Premiações</button>
+    </div>
   </nav>
 
   <div class="page-shell">
@@ -130,6 +133,6 @@
     </div>
   </dialog>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>
