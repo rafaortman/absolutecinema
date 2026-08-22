@@ -102,16 +102,18 @@ function card(m){const primary=state.view==='lists'?`★ ${points(m)} pontos · 
 function render(){const list=sortMovies(movies.filter(matches));$('resultCount').textContent=list.length;if(!list.length){$('movieGrid').innerHTML=state.favoritesOnly?'<div class="empty">Você ainda não favoritou nenhum filme. Toque no ♥ de um filme para salvá-lo aqui.</div>':'<div class="empty">Nenhum filme encontrado com esses filtros.</div>';return;}if(state.view==='awards'&&['yearDesc','yearAsc'].includes(state.sort)){let last=null;$('movieGrid').innerHTML=list.map(m=>{const y=awardAnchor(m);const sep=y!==last?`<div class="year-separator">${y}</div>`:'';last=y;return sep+card(m);}).join('');}else $('movieGrid').innerHTML=list.map(card).join('');}
 
 function drawPool(){return movies.filter(m=>(state.view==='lists'?m.rankings.length:m.awards.length)&&(!drawState.genre||m.genres.includes(drawState.genre))&&(!drawState.platforms.size||m.streaming.subscription.some(p=>drawState.platforms.has(p))));}
-function draw(){const pool=drawPool();const m=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;shownMovie=m;$('drawResult').innerHTML=m?card(m):'<div class="empty">Nenhum filme com esses critérios.</div>';if(m)syncMovieUrl(m);}
+function draw(){const pool=drawPool();const m=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;shownMovie=m;$('drawResult').innerHTML=m?card(m):'<div class="empty">Nenhum filme com esses critérios.</div>';if(m)syncMovieUrl(m);syncFav();}
 
 let shownMovie=null;
 const slugify=s=>(s||'').normalize('NFKD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'');
 const movieSlug=m=>slugify(m.title.original||m.title.pt);
 function movieKey(m){const base=movieSlug(m);const dupe=movies.filter(x=>movieSlug(x)===base||slugify(x.title.pt)===base).length>1;return dupe?`${base}-${m.id}`:base;}
 function shareUrl(m){return `${location.origin}${location.pathname}?filme=${movieKey(m)}`;}
+function whatsappUrl(m){const ov=(m.overview||'').trim();const short=ov.length>180?ov.slice(0,180).trim()+'…':ov;const msg=`*${titleOf(m)}*${m.releaseYear?` (${m.releaseYear})`:''}${short?`\n${short}`:''}\n\n${shareUrl(m)}`;return `https://wa.me/?text=${encodeURIComponent(msg)}`;}
 function syncMovieUrl(m){history.replaceState(null,'',`?filme=${movieKey(m)}`);}
 function findMovie(param){param=(param||'').toLowerCase();if(/^\d+$/.test(param))return movies.find(m=>m.id===+param);const idm=param.match(/-(\d+)$/);if(idm){const byId=movies.find(m=>m.id===+idm[1]);if(byId)return byId;}return movies.find(m=>movieSlug(m)===param||slugify(m.title.pt)===param);}
-function openMovie(m){shownMovie=m;$('drawResult').innerHTML=card(m);syncMovieUrl(m);if(!$('shuffleDialog').open)$('shuffleDialog').showModal();}
+function openMovie(m){shownMovie=m;$('drawResult').innerHTML=card(m);syncMovieUrl(m);syncFav();if(!$('shuffleDialog').open)$('shuffleDialog').showModal();}
+function syncFav(){const b=$('favMovie');if(!shownMovie)return;const on=favorites.has(shownMovie.id);b.textContent=on?'♥':'♡';b.classList.toggle('active',on);}
 function copyText(t){if(navigator.clipboard&&window.isSecureContext)return navigator.clipboard.writeText(t);return new Promise(res=>{const ta=document.createElement('textarea');ta.value=t;ta.style.cssText='position:fixed;opacity:0';$('shuffleDialog').appendChild(ta);ta.select();try{document.execCommand('copy');}catch(e){}ta.remove();res();});}
 function showToast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800);}
 
@@ -144,6 +146,8 @@ document.querySelectorAll('[data-shuffle]').forEach(button=>button.addEventListe
 $('filtersToggle').addEventListener('click',()=>{const filters=document.querySelector('.filters');const collapsed=filters.classList.toggle('collapsed');$('filtersToggle').setAttribute('aria-expanded',String(!collapsed));});
 $('closeShuffle').addEventListener('click',()=>$('shuffleDialog').close()); $('drawAgain').addEventListener('click',draw); $('drawGenre').addEventListener('change',e=>drawState.genre=e.target.value);
 $('copyMovie').addEventListener('click',e=>{if(!shownMovie)return;copyText(shareUrl(shownMovie)).then(()=>showToast('Filme copiado'));e.currentTarget.blur();});
+$('shareWhats').addEventListener('click',e=>{if(!shownMovie)return;window.open(whatsappUrl(shownMovie),'_blank','noopener');e.currentTarget.blur();});
+$('favMovie').addEventListener('click',e=>{if(!shownMovie)return;const id=shownMovie.id;favorites.has(id)?favorites.delete(id):favorites.add(id);localStorage.setItem('absolute-cinema:favorites',JSON.stringify([...favorites]));syncFav();render();e.currentTarget.blur();});
 $('shuffleDialog').addEventListener('close',()=>{shownMovie=null;history.replaceState(null,'',`?view=${state.view}`);});
 if(new URLSearchParams(location.search).get('filme')){$('drawResult').innerHTML='<div class="empty">Carregando…</div>';$('shuffleDialog').showModal();}
 boot().catch(err=>{$('movieGrid').innerHTML=`<div class="empty">Não foi possível carregar o catálogo: ${esc(err.message)}</div>`;});
