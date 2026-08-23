@@ -14,6 +14,7 @@ Uso:
 import argparse
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -58,9 +59,10 @@ PROVIDER_DROP = {"Sun Nxt"}           # serviço indiano, não opera no BR
 
 
 def norm_provider(name):
-    n = name.replace(" Amazon Channel", "").replace(" Apple TV Channel", "")
+    # remove sufixo de "canal" agregado (Amazon/Apple TV), case-insensitive
+    n = re.sub(r"\s+(?:Amazon|Apple TV)\s+Channel", "", name, flags=re.I)
     n = n.replace("Amazon Prime Video", "Prime Video").replace("Prime Video with Ads", "Prime Video")
-    n = n.replace("Paramount Plus", "Paramount+").replace("Paramount+ Amazon Channel", "Paramount+")
+    n = n.replace("Paramount Plus", "Paramount+")
     n = n.replace("Standard with Ads", "").replace(" Premium", "").strip()
     n = PROVIDER_ALIAS.get(n, n)
     return "" if n in PROVIDER_DROP else n
@@ -103,9 +105,28 @@ def main():
     ap.add_argument("--limit", type=int, help="processa só os N primeiros filmes")
     ap.add_argument("--resume", action="store_true", help="pula os já checados hoje")
     ap.add_argument("--dry-run", action="store_true", help="não grava, só imprime o resumo")
+    ap.add_argument("--normalize-only", action="store_true",
+                    help="só re-normaliza os provedores já gravados (sem TMDB, sem mexer no checkedAt)")
     args = ap.parse_args()
 
     movies = json.load(open(DATA, encoding="utf-8"))
+
+    if args.normalize_only:
+        changed = 0
+        for m in movies:
+            st = m.get("streaming", {})
+            old = st.get("subscription", [])
+            new = sorted({n for p in old if (n := norm_provider(p))})
+            if new != old:
+                changed += 1
+                st["subscription"] = new
+        print(f"Normalização: {changed} filme(s) ajustado(s)")
+        if args.dry_run:
+            print("DRY-RUN: nada foi gravado.")
+        else:
+            save(movies)
+            print(f"Gravado: {os.path.relpath(DATA, ROOT)}")
+        return
     todo = movies[:args.limit] if args.limit else movies
     total = len(todo)
     changed = failed = skipped = 0
