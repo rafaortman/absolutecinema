@@ -1,8 +1,10 @@
 # Absolute Cinema
 
-O Absolute Cinema une as curadorias do [FilmCurator](https://github.com/rafaortman/filmcurator)
-e do [FilmFestivals](https://github.com/rafaortman/filmfestivals) em um só catálogo para
-descobrir e sortear filmes.
+Catálogo único para descobrir e sortear filmes, reunindo listas críticas e
+premiações. Originou-se dos projetos [FilmCurator](https://github.com/rafaortman/filmcurator)
+e [FilmFestivals](https://github.com/rafaortman/filmfestivals), mas **é autocontido**:
+os dados vivem aqui em `data/` e este repositório não depende dos outros para rodar
+ou atualizar.
 
 As listas críticas e as premiações continuam sendo sinais editoriais diferentes:
 
@@ -12,10 +14,10 @@ As listas críticas e as premiações continuam sendo sinais editoriais diferent
 
 ## Estado atual
 
-A primeira versão funcional oferece as visões **Listas** e **Premiações**, filtros
-próprios, plataformas múltiplas persistentes, favoritos compartilhados e sorteio
-independente. O importador normaliza os dois projetos sem modificá-los e produz um
-catálogo canônico em `data/movies.json`.
+Oferece as visões **Listas** e **Premiações**, filtros próprios, plataformas
+múltiplas persistentes, favoritos e sorteio com link compartilhável. O catálogo
+canônico é `data/movies.json` (fonte da verdade); os créditos das listas ficam em
+`data/sources.json`.
 
 Para abrir localmente:
 
@@ -23,18 +25,21 @@ Para abrir localmente:
 python3 -m http.server 8000
 ```
 
-## Gerar os dados
+## Atualizar a disponibilidade de streaming (BR)
 
-Clone os três repositórios no mesmo diretório e execute:
+`data/movies.json` guarda, por filme, os serviços de assinatura no Brasil e a data da
+última checagem. Para atualizar direto no catálogo:
 
 ```bash
-python3 scripts/import_sources.py \
-  --curator ../filmcurator \
-  --festivals ../filmfestivals
+python3 scripts/refresh_streaming.py
 ```
 
-O comando também gera `data/sources.json` e exibe um resumo da junção. Para apenas
-validar as fontes e o resultado, use `--check`.
+Consulta o TMDB (`/movie/{id}/watch/providers`, BR flatrate — dados do JustWatch),
+normaliza os nomes dos provedores e grava `streaming.subscription`/`checkedAt` no
+lugar. A data no rodapé do app deriva desse `checkedAt`, então atualiza sozinha.
+Requer `TMDB_API_KEY` num arquivo `.env` local (ignorado pelo git). Opções úteis:
+`--dry-run` (não grava), `--limit N` (testa), `--resume` (retoma pulando os já
+checados hoje).
 
 ## Decisões de produto
 
