@@ -38,8 +38,9 @@ function buildChecks(id, values, selected, onChange){
 function platformSummary(selected){ return !selected.size?'Todas':selected.size<=2?[...selected].join(', '):`${[...selected].slice(0,2).join(', ')} +${selected.size-2}`; }
 
 function setView(view, reset=true){
-  state.view=view; state.favoritesOnly=false;
-  if(reset) resetTemporary();
+  state.view=view;
+  if(reset){ state.favoritesOnly=false; resetTemporary(); }
+  else resetViewSpecific();
   document.querySelectorAll('.view-button').forEach(b=>b.classList.toggle('active',b.dataset.view===view));
   document.querySelectorAll('.lists-only').forEach(e=>e.hidden=view!=='lists');
   document.querySelectorAll('.awards-only').forEach(e=>e.hidden=view!=='awards');
@@ -54,6 +55,12 @@ function setView(view, reset=true){
 
 function resetTemporary(){
   Object.assign(state,{query:'',awardFilter:'',onlyBoth:false,country:'',director:'',genre:'',yearMin:limits[state.view].min,yearMax:limits[state.view].max,duration:limits.duration,sort:state.view==='lists'?'score':'yearDesc'});
+  state.sources=new Set(state.view==='lists'?Object.keys(sources):['cannes','oscar']);
+}
+// Ao trocar de modalidade: preserva filtros compartilhados (busca, país, diretor,
+// gênero, duração, plataformas) e reseta só o que é específico da modalidade.
+function resetViewSpecific(){
+  Object.assign(state,{awardFilter:'',onlyBoth:false,yearMin:limits[state.view].min,yearMax:limits[state.view].max,sort:state.view==='lists'?'score':'yearDesc'});
   state.sources=new Set(state.view==='lists'?Object.keys(sources):['cannes','oscar']);
 }
 function resetAll(){ state.platforms.clear(); localStorage.setItem('absolute-cinema:platforms','[]'); resetTemporary(); buildSourceChips(); syncPlatformChecks(); buildSort(); syncInputs(); render(); }
@@ -76,8 +83,8 @@ function syncInputs(){
 }
 
 function matches(m){
-  if(state.view==='lists'&&!m.rankings.length)return false; if(state.view==='awards'&&!m.awards.length)return false;
   if(state.favoritesOnly)return favorites.has(m.id);
+  if(state.view==='lists'&&!m.rankings.length)return false; if(state.view==='awards'&&!m.awards.length)return false;
   const hay=`${titleOf(m)} ${m.title.original||''} ${m.director||''}`.toLowerCase(); if(state.query&&!hay.includes(state.query.toLowerCase()))return false;
   if(state.view==='lists'){
     if(!m.rankings.some(r=>state.sources.has(r.source)))return false;
@@ -93,8 +100,8 @@ function matches(m){
   return true;
 }
 function sortMovies(list){return list.sort((a,b)=>{switch(state.sort){case'score':return points(b)-points(a);case'yearDesc':return state.view==='lists'?(b.releaseYear||0)-(a.releaseYear||0):(awardAnchor(b)-awardAnchor(a)||comparePrestige(a,b));case'yearAsc':return state.view==='lists'?(a.releaseYear||9999)-(b.releaseYear||9999):(awardAnchor(a)-awardAnchor(b)||comparePrestige(a,b));case'title':return titleOf(a).localeCompare(titleOf(b),'pt-BR');case'durationAsc':return(a.duration||9999)-(b.duration||9999);case'durationDesc':return(b.duration||0)-(a.duration||0);default:return 0;}});}
-const awardsHtml=m=>['cannes','oscar'].map(f=>{const a=m.awards.filter(x=>x.festival===f);return a.length?`<span class="award-row"><img class="award-icon" src="assets/${f}-circle.svg" alt="${f==='cannes'?'Cannes':'Oscar'}"><span>${a.map(x=>esc(AWARD_LABEL[x.category]||x.category)+(x.recipient?` (${esc(x.recipient)})`:'')).join(', ')}</span></span>`:''}).filter(Boolean).join('');
-const rankingsHtml=m=>m.rankings.map(r=>`${esc(sources[r.source]?.label||r.source)} #${r.position}`).join(' · ');
+const awardsHtml=m=>['cannes','oscar'].map(f=>{const a=m.awards.filter(x=>x.festival===f);return a.length?`<span class="award-row"><img class="award-icon" src="assets/${f}-circle.svg" alt="${f==='cannes'?'Cannes':'Oscar'}"><span>${[...new Set(a.map(x=>esc(AWARD_LABEL[x.category]||x.category)))].join(', ')}</span></span>`:''}).filter(Boolean).join('');
+const rankingsHtml=m=>{if(!m.rankings.length)return '';const list=m.rankings.map(r=>`${esc(sources[r.source]?.label||r.source)} #${r.position}`.replaceAll(' ','&nbsp;')).join(', ');return `<span class="award-row"><img class="award-icon" src="assets/critica.svg" alt="Crítica"><span>${list}</span></span>`;};
 const festivalSince=f=>Math.min(...movies.flatMap(m=>m.awards.filter(a=>a.festival===f).map(a=>a.awardYear)));
 function institutesInline(){const s=Object.values(sources).map(x=>x.url?`<a href="${x.url}" target="_blank" rel="noopener">${esc(x.label)}</a>`:esc(x.label));return s.length>1?`${s.slice(0,-1).join(', ')} e ${s[s.length-1]}`:s.join('');}
 function festivalYears(m){const c=m.awards.filter(a=>a.festival==='cannes').map(a=>a.awardYear),o=m.awards.filter(a=>a.festival==='oscar').map(a=>a.awardYear);return c.length&&o.length&&Math.min(...c)!==Math.min(...o)?`<p class="year-note">Cannes ${Math.min(...c)} · Oscar ${Math.min(...o)}</p>`:'';}
@@ -107,8 +114,10 @@ const WHATS_SVG='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.04 2C6
 function googleSearch(m){window.open(`https://www.google.com/search?q=${encodeURIComponent(`${titleOf(m)} ${m.releaseYear||''} filme`)}`,'_blank','noopener');}
 function copyMovie(m){copyText(shareUrl(m)).then(()=>showToast('Filme copiado'));}
 function shareWhatsapp(m){window.open(whatsappUrl(m),'_blank','noopener');}
-function card(m){const primary=state.view==='lists'?`★ ${points(m)} pontos · ${rankingsHtml(m)}`:awardsHtml(m);const cross=state.view==='lists'?awardsHtml(m):rankingsHtml(m);const poster=m.posterPath?`<img class="poster" src="https://image.tmdb.org/t/p/w185${m.posterPath}" alt="Pôster de ${esc(titleOf(m))}" loading="lazy">`:'<div class="poster none">Sem pôster</div>';return `<article class="movie-card" data-id="${m.id}">${poster}<div class="card-actions"><button class="card-act fav ${favorites.has(m.id)?'active':''}" data-favorite="${m.id}" type="button" aria-label="Favoritar">${heartSvg(favorites.has(m.id))}</button><button class="card-act" data-google="${m.id}" type="button" aria-label="Buscar no Google">${SEARCH_SVG}</button><button class="card-act" data-copy="${m.id}" type="button" aria-label="Copiar link do filme">${COPY_SVG}</button><button class="card-act whats" data-whats="${m.id}" type="button" aria-label="Compartilhar no WhatsApp">${WHATS_SVG}</button></div><div class="card-body"><h3>${esc(titleOf(m))}</h3>${m.title.original&&m.title.original!==titleOf(m)?`<p class="original-title">${esc(m.title.original)}</p>`:''}<div class="primary-meta">${primary}</div>${cross?`<div class="cross-meta">${cross}</div>`:''}${festivalYears(m)}<div class="genres">${m.genres.map(g=>`<span>${esc(g)}</span>`).join('')}</div><div class="facts"><span><b>${esc(m.director||'')}</b></span><span>${m.releaseYear||''}</span><span>${esc(m.countries.join(' / '))}</span><span>${m.duration?`${m.duration} min`:''}</span></div><div class="platforms">${m.streaming.subscription.length?m.streaming.subscription.map(p=>`<span class="platform-tag">${esc(p)}</span>`).join(''):'<span class="no-streaming">sem streaming BR</span>'}</div></div><div class="synopsis-wrap"><p class="synopsis">${esc(m.overview||'Sinopse indisponível.')}</p></div></article>`;}
-function render(){const list=sortMovies(movies.filter(matches));$('resultCount').textContent=list.length;if(!list.length){$('movieGrid').innerHTML=state.favoritesOnly?'<div class="empty">Você ainda não favoritou nenhum filme. Toque no ♥ de um filme para salvá-lo aqui.</div>':'<div class="empty">Nenhum filme encontrado com esses filtros.</div>';return;}if(state.view==='awards'&&['yearDesc','yearAsc'].includes(state.sort)){let last=null;$('movieGrid').innerHTML=list.map(m=>{const y=awardAnchor(m);const sep=y!==last?`<div class="year-separator">${y}</div>`:'';last=y;return sep+card(m);}).join('');}else $('movieGrid').innerHTML=list.map(card).join('');}
+function creditsLine(m){const cast=m.cast&&m.cast.length?m.cast.map(esc).join(', '):'';const dir=m.director?`De <b>${esc(m.director)}</b>`:'';const s=dir&&cast?`${dir}, com ${cast}`:(dir||(cast?`Com ${cast}`:''));return s?`<p class="credits">${s}</p>`:'';}
+function specsLine(m){const s=[m.releaseYear,esc(m.countries.join(' / ')),m.duration?`${m.duration} min`:''].filter(Boolean).join(' • ');return s?`<p class="specs">${s}</p>`:'';}
+function card(m){const primary=state.view==='lists'?rankingsHtml(m):awardsHtml(m);const cross=state.view==='lists'?awardsHtml(m):rankingsHtml(m);const poster=m.posterPath?`<img class="poster" src="https://image.tmdb.org/t/p/w185${m.posterPath}" alt="Pôster de ${esc(titleOf(m))}" loading="lazy">`:'<div class="poster none">Sem pôster</div>';return `<article class="movie-card" data-id="${m.id}" data-points="${points(m)}">${poster}<div class="card-actions"><button class="card-act fav ${favorites.has(m.id)?'active':''}" data-favorite="${m.id}" type="button" aria-label="Favoritar">${heartSvg(favorites.has(m.id))}</button><button class="card-act" data-google="${m.id}" type="button" aria-label="Buscar no Google">${SEARCH_SVG}</button><button class="card-act" data-copy="${m.id}" type="button" aria-label="Copiar link do filme">${COPY_SVG}</button><button class="card-act whats" data-whats="${m.id}" type="button" aria-label="Compartilhar no WhatsApp">${WHATS_SVG}</button></div><div class="card-body"><h3>${esc(titleOf(m))}</h3>${m.title.original&&m.title.original!==titleOf(m)?`<p class="original-title sr-only">${esc(m.title.original)}</p>`:''}${festivalYears(m)}${creditsLine(m)}${specsLine(m)}<div class="primary-meta">${primary}</div>${cross?`<div class="cross-meta">${cross}</div>`:''}<div class="genres">${m.genres.map(g=>`<span>${esc(g)}</span>`).join('')}</div><div class="platforms">${m.streaming.subscription.map(p=>`<span class="platform-tag">${esc(p)}</span>`).join('')}</div></div><div class="synopsis-wrap"><p class="synopsis">${esc(m.overview||'Sinopse indisponível.')}</p></div></article>`;}
+function render(){const list=sortMovies(movies.filter(matches));$('resultCount').textContent=list.length;if(!list.length){$('movieGrid').innerHTML=state.favoritesOnly?'<div class="empty">Você ainda não favoritou nenhum filme. Toque no ♥ de um filme para salvá-lo aqui.</div>':'<div class="empty">Nenhum filme encontrado com esses filtros.</div>';return;}if(state.view==='awards'&&!state.favoritesOnly&&['yearDesc','yearAsc'].includes(state.sort)){let last=null;$('movieGrid').innerHTML=list.map(m=>{const y=awardAnchor(m);const sep=y!==last?`<div class="year-separator">${y}</div>`:'';last=y;return sep+card(m);}).join('');}else $('movieGrid').innerHTML=list.map(card).join('');}
 
 function drawPool(){return movies.filter(m=>(state.view==='lists'?m.rankings.length:m.awards.length)&&(!drawState.genre||m.genres.includes(drawState.genre))&&(!drawState.platforms.size||m.streaming.subscription.some(p=>drawState.platforms.has(p))));}
 function draw(){const pool=drawPool();const m=pool.length?pool[Math.floor(Math.random()*pool.length)]:null;shownMovie=m;$('drawResult').innerHTML=m?card(m):'<div class="empty">Nenhum filme com esses critérios.</div>';if(m)syncMovieUrl(m);syncFav();}
@@ -143,8 +152,8 @@ async function boot(){
   if(shared){const m=findMovie(shared);if(m)openMovie(m);else if($('shuffleDialog').open)$('shuffleDialog').close();}
 }
 
-document.querySelector('.view-switch').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view,true);});
-document.querySelector('.switch').addEventListener('click',()=>setView(state.view==='lists'?'awards':'lists',true));
+document.querySelector('.view-switch').addEventListener('click',e=>{const b=e.target.closest('[data-view]');if(b)setView(b.dataset.view,false);});
+document.querySelector('.switch').addEventListener('click',()=>setView(state.view==='lists'?'awards':'lists',false));
 $('sourceChips').addEventListener('change',e=>{const input=e.target.closest('input[data-source]');if(!input)return;input.checked?state.sources.add(input.dataset.source):state.sources.delete(input.dataset.source);render();});
 [['query','input','query'],['awardFilter','change','awardFilter'],['country','change','country'],['director','change','director'],['genre','change','genre'],['sort','change','sort']].forEach(([id,event,key])=>$(id).addEventListener(event,e=>{state[key]=e.target.value;render();}));
 $('onlyBoth').addEventListener('change',e=>{state.onlyBoth=e.target.checked;render();});
