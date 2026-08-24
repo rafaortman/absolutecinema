@@ -173,3 +173,6 @@ $('googleMovie').addEventListener('click',e=>{if(shownMovie)googleSearch(shownMo
 $('shuffleDialog').addEventListener('close',()=>{shownMovie=null;history.replaceState(null,'',`?view=${state.view}`);});
 if(new URLSearchParams(location.search).get('filme')){$('drawResult').innerHTML='<div class="empty">Carregando…</div>';$('shuffleDialog').showModal();}
 boot().catch(err=>{$('movieGrid').innerHTML=`<div class="empty">Não foi possível carregar o catálogo: ${esc(err.message)}</div>`;});
+
+// Consentimento LGPD (informativo; o GA4 dispara sempre)
+(()=>{const bar=$('lgpd');if(!bar)return;const KEY='absolute-cinema:lgpd';if(localStorage.getItem(KEY))return;bar.hidden=false;$('lgpdOk').addEventListener('click',()=>{localStorage.setItem(KEY,'1');bar.hidden=true;});})();
